@@ -157,3 +157,17 @@ if(UNIX)
 
     include (CPack)
 endif(UNIX)
+
+
+find_program(Docker_EXECUTABLE docker)
+if(Docker_EXECUTABLE)
+    set(DOCKER_IMAGE "ghcr.io/intel/pcm:latest" CACHE STRING "Docker --tag used during docker build")
+    message(STATUS "docker: found executable=${Docker_EXECUTABLE} - adding new docker_build target")
+    message(STATUS "docker: DOCKER_IMAGE=${DOCKER_IMAGE}")
+    add_custom_target(docker_build
+        #COMMAND ${CMAKE_COMMAND} -E copy_directory ${FFMPEG} ${CMAKE_CURRENT_LIST_DIR}
+        #COMMAND ${CMAKE_COMMAND} -E copy ${FFMPEG_SO_INSTALL} ${FFMPEG}/lib
+        COMMAND ${Docker_EXECUTABLE} build --tag ${DOCKER_IMAGE} --file ${CMAKE_CURRENT_LIST_DIR}/Dockerfile ${CMAKE_CURRENT_LIST_DIR}
+    )
+endif()
+
