@@ -2823,7 +2823,7 @@ void HTTPServer::run() {
 
         // Client connected, let's determine the client ip as string.
         char ipbuf[INET_ADDRSTRLEN];
-	std::fill(ipbuf, ipbuf + INET_ADDRSTRLEN, 0);
+        std::fill(ipbuf, ipbuf + INET_ADDRSTRLEN, 0);
         char const * resbuf = ::inet_ntop( AF_INET, &(clientAddress.sin_addr), ipbuf, INET_ADDRSTRLEN );
         if ( nullptr == resbuf ) {
             std::cerr << ::strerror( errno ) << "\n";
@@ -2914,8 +2914,17 @@ void HTTPSServer::run() {
         SSL_set_fd( ssl, clientSocketFD );
 
         // Check if the SSL handshake worked
-        if ( SSL_accept( ssl ) <= 0 )
+        int r = SSL_accept( ssl );
+        if ( r <= 0 ){
+            int err = SSL_get_error(ssl, r);
+            if(err == SSL_ERROR_SSL){              
+                          ERR_load_crypto_strings();
+                          char msg[1024];
+                          ERR_error_string_n(ERR_get_error(), msg, sizeof(msg));
+                          printf("%s %s %s %s\n", msg, ERR_lib_error_string(0), ERR_func_error_string(0), ERR_reason_error_string(0));
+            }
             throw std::runtime_error( "SSL handshake failure" );
+        }
 
         // Client connected, let's determine the client ip as string.
         char ipbuf[INET_ADDRSTRLEN];
